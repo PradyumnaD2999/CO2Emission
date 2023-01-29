@@ -1,0 +1,325 @@
+
+#Numerical Variables Graphs 
+
+Loading dataset
+```{r}
+co2emissions=read.csv("CO2 Emissions_Canada.csv",header=FALSE)
+```
+
+Plotting a boxplot for Engine Size
+```{r}
+co2emissions$V12<-as.numeric(co2emissions$V12) #converting to numeric since first object is column name in string format
+co2emissions$V4<-as.numeric(co2emissions$V4)
+#co2emissions
+
+min(co2emissions$V4,na.rm="TRUE")
+max(co2emissions$V4,na.rm="TRUE")
+boxplot(co2emissions$V4,ylim=c(0.5,9),main="Engine Size",horizontal = TRUE,border="brown",xlab="Engine size in Litres",col="bisque",na.rm=TRUE)
+```
+Plotting a boxplot for Cylinders
+
+```{r}
+co2emissions$V5<-as.numeric(co2emissions$V5)
+boxplot(co2emissions$V5,main="Cylinders",horizontal=TRUE,xlab="Numer of Cylinders",border="deepskyblue4",col="darkslategray1",na.rm=TRUE)
+```
+
+Plotting a boxplot for Fuel Consumption in City Roads
+```{r}
+co2emissions$V8<-as.numeric(co2emissions$V8)
+boxplot(co2emissions$V8,main="Fuel Consumption in City Roads",horizontal=TRUE,xlab="Fuel consumption (Litres/100km)",border="chocolate4",col="lightpink",na.rm=TRUE)
+```
+Plotting a boxplot for Fuel Consumption in Highways
+```{r}
+co2emissions$V9<-as.numeric(co2emissions$V9)
+boxplot(co2emissions$V9,main="Fuel Consumption in Highways",horizontal=TRUE,xlab="Fuel consumption (Litres/100km)",border="lightgoldenrod4",col="lightgoldenrod1",na.rm=TRUE)
+```
+Plotting a boxplot for Combined Fuel Consumption (City Roads and Highways)
+```{r}
+co2emissions$V10<-as.numeric(co2emissions$V10)
+boxplot(co2emissions$V10,main="Combined Fuel Consumption",horizontal=TRUE,xlab="Fuel consumption (Litres/100km)",border="orangered4",col="orange3",na.rm=TRUE)
+```
+
+#Categorical Variables Graphs 
+```{r}
+data = read.csv("CO2 Emissions_Canada.csv")
+
+summary_data <- tapply(data$CO2.Emissions.g.km., data$Cylinders,
+                       FUN = mean, na.rm = TRUE)
+summary_data
+
+library(RColorBrewer)
+coul <- brewer.pal(5, "Set2") 
+
+barplot(summary_data, xlab = "Cylinders",
+        main = "CO2 emission",
+        col = coul,
+        beside = TRUE,
+        legend.text = rownames(summary_data),
+        args.legend = list(title = "Cylinders", x = "topright",
+                           inset = c(-0.20, 0)))
+
+
+   
+```
+
+```{r}
+
+
+summary_data <- tapply(data$CO2.Emissions.g.km., data$Transmission,
+                       FUN = mean, na.rm = TRUE)
+summary_data
+
+library(RColorBrewer)
+coul <- brewer.pal(5, "Set2") 
+
+barplot(summary_data, xlab = "Transmission Type",
+        main = "CO2 emission",
+        col = coul,
+        beside = TRUE,
+        args.legend = list(title = "Transmission Type", x = "topright"), 
+        las=2)
+
+
+```
+
+```{r}
+data2 = read.csv("CO2_Emissions_Canada_1.csv")
+
+summary_data1 <- tapply(data2$CO2.Emissions.g.km., data2$Vehicle.Class,
+                       FUN = mean, na.rm = TRUE)
+summary_data1
+
+par(mar=c(3, 16, 3, 1)) 
+
+barplot(summary_data1,
+        main = "CO2 emission per Vehicle class",
+        col = coul,
+        las=2,
+        horiz=TRUE)
+
+
+```
+
+```{r}
+
+
+summary_data <- tapply(data$CO2.Emissions.g.km., data$Fuel.Type,
+                       FUN = mean, na.rm = TRUE)
+summary_data
+
+
+
+barplot(summary_data, xlab = "Fuel Type",
+        main = "CO2 emission",
+        col = coul,
+        beside = TRUE,
+        legend.text = rownames(summary_data))
+
+
+```
+
+
+
+```{r}
+set.seed(4555)
+
+library(caret)
+library(fastDummies)
+library(corrplot)
+library(dplyr)
+raw_data <- read.csv("CO2 Emissions_Canada.csv")
+
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "SUV - SMALL"] <- "SUV"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "SUV - STANDARD"] <- "SUV"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "PICKUP TRUCK - STANDARD"] <- "PICKUP TRUCK"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "PICKUP TRUCK - SMALL"] <- "PICKUP TRUCK"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "VAN - CARGO"] <- "VAN"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "VAN - PASSENGER"] <- "VAN"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "MINIVAN"] <- "VAN"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "STATION WAGON - MID-SIZE"] <- "STATION WAGON"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "STATION WAGON - SMALL"] <- "STATION WAGON"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "MINICOMPACT"] <- "COMPACT"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "SUBCOMPACT"] <- "COMPACT"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "MID-SIZE"] <- "SEDAN"
+raw_data$Vehicle.Class[raw_data$Vehicle.Class == "FULL-SIZE"] <- "SEDAN"
+
+
+dummy_data <- dummy_cols(raw_data, select_columns = c("Make","Vehicle.Class","Transmission","Fuel.Type"))
+dummy_data <- dummy_data[,-c(1,2,3,5,6,7)]
+dummy_data <- dummy_data[,-c(2,3,5)]
+
+dummy_data.cor <- cor(dummy_data)
+
+trainIndex <- createDataPartition(dummy_data$CO2.Emissions.g.km., p = 0.8, list = FALSE, times = 1)
+
+train_data <- dummy_data[trainIndex,]
+test_data <- dummy_data[-trainIndex,]
+
+trainx <- select(train_data,-CO2.Emissions.g.km.)
+trainx <- as.matrix(trainx)
+trainy <- train_data$CO2.Emissions.g.km.
+
+
+test_response <- test_data$CO2.Emissions.g.km.
+testx <- select(test_data,-CO2.Emissions.g.km.)
+testx <- as.matrix(testx)
+
+```
+
+```{r}
+
+### Source: https://towardsdatascience.com/how-to-create-a-correlation-matrix-with-too-many-variables-309cc0c0a57
+### Courtesy of Catherine Williams
+corr_simple <- function(data=df,sig=0.5){
+  #convert data to numeric in order to run correlations
+  #convert to factor first to keep the integrity of the data - each value will become a number rather than turn into NA
+  df_cor <- data %>% mutate_if(is.character, as.factor)
+  df_cor <- df_cor %>% mutate_if(is.factor, as.numeric)  #run a correlation and drop the insignificant ones
+  corr <- cor(df_cor)
+  #prepare to drop duplicates and correlations of 1     
+  corr[lower.tri(corr,diag=TRUE)] <- NA 
+  #drop perfect correlations
+  corr[corr == 1] <- NA   #turn into a 3-column table
+  corr <- as.data.frame(as.table(corr))
+  #remove the NA values from above 
+  corr <- na.omit(corr)   #select significant values  
+  corr <- subset(corr, abs(Freq) > sig) 
+  #sort by highest correlation
+  corr <- corr[order(-abs(corr$Freq)),]   #print table
+  print(corr)  #turn corr back into matrix in order to plot with corrplot
+  mtx_corr <- reshape2::acast(corr, Var1~Var2, value.var="Freq")
+  
+  #plot correlations visually
+  corrplot(mtx_corr, is.corr=FALSE, tl.col="black", na.label=" ")
+}
+
+corr_simple(data = dummy_data, sig = 0.4)
+
+```
+
+### Linear Model
+
+```{r}
+
+linear_model <- lm(CO2.Emissions.g.km. ~ ., data = train_data)
+summary(linear_model)
+
+lin_pred <- predict(linear_model,new_data = test_data)
+lin_test_mse <- mean((test_response-lin_pred)^2)
+lin_test_mse
+
+AIC(linear_model)
+BIC(linear_model)
+
+library(caret)
+data.frame(
+  R2 = R2(lin_pred, test_response),
+  RMSE = RMSE(lin_pred, test_response),
+  MAE = MAE(lin_pred, test_response))
+```
+### Lasso
+```{r}
+library(glmnet)
+
+lasso_cross <- cv.glmnet(trainx,trainy, alpha = 1)
+plot(lasso_cross)
+best_lambda <- lasso_cross$lambda.min
+lasso_model <- lasso_cross$glmnet.fit
+lasso_coef <- coef.glmnet(lasso_model, s = best_lambda)
+lasso_coef
+
+lasso_pred <- predict(lasso_model, s=best_lambda, newx = testx)
+
+lasso_mse <- mean((test_response-lasso_pred)^2)
+lasso_mse
+
+library(caret)
+data.frame(
+  R2 = R2(lasso_pred, test_response),
+  RMSE = RMSE(lasso_pred, test_response),
+  MAE = MAE(lasso_pred, test_response)
+)
+```
+### Ridge
+```{r}
+
+ridge_cross <- cv.glmnet(trainx,trainy, alpha = 0)
+plot(ridge_cross)
+best_lambda <- ridge_cross$lambda.min
+ridge_model <- ridge_cross$glmnet.fit
+ridge_coef <- coef.glmnet(ridge_model, s = best_lambda)
+ridge_coef
+
+ridge_pred <- predict(ridge_model, s=best_lambda, newx = testx)
+
+ridge_mse <- mean((test_response-ridge_pred)^2)
+ridge_mse
+
+library(caret)
+data.frame(
+  R2 = R2(ridge_pred, test_response),
+  RMSE = RMSE(ridge_pred, test_response),
+  MAE = MAE(ridge_pred, test_response)
+)
+```
+
+```{r}
+library(randomForest)
+
+rforest_model <- randomForest(x = trainx, y = trainy)
+rforest_pred <- predict(rforest_model, testx)
+rforest_mse <- mean((test_response-rforest_pred)^2)
+rforest_mse
+
+library(caret)
+data.frame(
+  R2 = R2(rforest_pred, test_response),
+  RMSE = RMSE(rforest_pred, test_response),
+  MAE = MAE(rforest_pred, test_response)
+)
+```
+
+#Gradient boosting 
+
+```{r}
+library(gbm)
+
+boost_model=gbm(CO2.Emissions.g.km. ~ ., data = train_data,distribution = "gaussian",n.trees = 10000,
+                  shrinkage = 0.01, interaction.depth = 4)
+boost_pred <- predict(boost_model, test_data)
+boost_mse <- mean((test_response-boost_pred)^2)
+boost_mse
+
+library(caret)
+data.frame(
+  R2 = R2(boost_pred, test_response),
+  RMSE = RMSE(boost_pred, test_response),
+  MAE = MAE(boost_pred, test_response)
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
